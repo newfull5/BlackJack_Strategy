@@ -1,8 +1,6 @@
 from matplotlib import pyplot as plt
 import re
 import random
-import re
-import random
 
 class BlackJack():
     
@@ -34,6 +32,9 @@ class BlackJack():
         
         self.A = re.compile('A')
         self.T = re.compile('10|J|Q|K')
+        
+
+
         
         
     def Begin(self):
@@ -144,6 +145,7 @@ class BlackJack():
             
     def Compare(self):
         if self.splited:
+            answer = []
             for p in self.player_point:
                 if p == 21:
                     if p == 21:
@@ -154,9 +156,14 @@ class BlackJack():
                 if p > self.dealer_point:
                     self.player_score += 2
                     self.player_wins += 1
+                    answer.append('P')
                     
                 elif p < self.dealer_point:
                     self.player_score -= 2
+                    answer.append('D')
+                    
+            return answer
+    
         else:
             if self.player_point[0] > self.dealer_point:
                 self.player_score += 2
@@ -166,33 +173,27 @@ class BlackJack():
             elif self.player_point[0] < self.dealer_point:
                 self.player_score -= 2
                 return 'D'
-
-
-
-breakpoint = 12
+            
 match_cnt = 0
 
 dealer_first_card = {
-    '11':0,
-    '2':0,
-    '3':0,
-    '4':0,
-    '5':0,
-    '6':0,
-    '7':0,
-    '8':0,
-    '9':0,
-    '10':0
-}
+        '11':0,
+        '2':0,
+        '3':0,
+        '4':0,
+        '5':0,
+        '6':0,
+        '7':0,
+        '8':0,
+        '9':0,
+        '10':0
+    } 
+
+
 
 def DealerBurstCase():
-    
-    global match_cnt
-    global dealer_first_card
         
     for _ in range(1000):
-
-
 
         a = BlackJack(always_insurance=False)
 
@@ -206,7 +207,7 @@ def DealerBurstCase():
 
             a.Begin() #시작 플레이어 카드 두장 받기
 
-            match_cnt += 1 #경기 횟수 +1
+            a.match_cnt += 1 #경기 횟수 +1
 
             a.PointCalc(a.player_card) #플레이어 카드 값 합계 계산
 
@@ -220,37 +221,51 @@ def DealerBurstCase():
             a.DealerCard() #딜러 카드 받기
 
             if a.dealer_point == -1:
-                dealer_first_card[str(a.CardSum(a.dealer_card[0]))] += 1
+                a.dealer_first_card[str(a.CardSum(a.dealer_card[0]))] += 1
 
 
 
-    print('딜러가 버스트 할 확률 : {:.2f}%'.format(100* sum(dealer_first_card.values())/match_cnt))
-    lists = list(dealer_first_card.values())[:-1] + [list(dealer_first_card.values())[-1]//4]*4
+    print('딜러가 버스트 할 확률 : {:.2f}%'.format(100* sum(a.dealer_first_card.values())/a.match_cnt))
+    lists = list(a.dealer_first_card.values())[:-1] + [list(a.dealer_first_card.values())[-1]//4]*4
     plt.bar(['A','2','3','4','5','6','7','8','9','10','J','Q','K'], lists)
     plt.show()
+    
+    
+dealer_first_cardsum = {
+                    '-1':0,
+                    '17':0,
+                    '18':0,
+                    '19':0,
+                    '20':0,
+                    '21':0
+                } 
+    
+def DealerCardCase():
+    
+    global match_cnt
+    global dealer_first_cardsum
+    
+    for _ in range(1000):
+        
+        a = BlackJack()
+        
+        while len(a.deq) > 20:
+            
+            a.dealer_card = []
+            a.dealer_point = []
+            match_cnt += 1
+            
+            a.DealerFirstCard()
+            a.DealerCard()
+            
+            dealer_first_cardsum[str(a.dealer_point)] += 1
 
-#12이하 스탠드
+
 
 
 def WhenToHit(breakpoint):
-    global dealer_first_card
-    global match_cnt
-    
-    dealer_first_card = {
-        '11':0,
-        '2':0,
-        '3':0,
-        '4':0,
-        '5':0,
-        '6':0,
-        '7':0,
-        '8':0,
-        '9':0,
-        '10':0
-    }
 
     breakpoint = breakpoint
-    match_cnt = 0
 
     for _ in range(1000):
 
@@ -266,7 +281,7 @@ def WhenToHit(breakpoint):
 
             a.Begin() #시작 플레이어 카드 두장 받기
 
-            match_cnt += 1 #경기 횟수 +1
+            a.match_cnt += 1 #경기 횟수 +1
 
             a.PointCalc(a.player_card) #플레이어 카드 값 합계 계산
 
@@ -284,9 +299,127 @@ def WhenToHit(breakpoint):
             a.DealerCard() #딜러 카드 받기
 
             if a.Compare() == 'P':
+                a.dealer_first_card[str(a.CardSum(a.dealer_card[0]))] += 1
+
+    print('승률 : {:.2f}%'.format(100* sum(a.dealer_first_card.values())/a.match_cnt))
+    lists = list(a.dealer_first_card.values())[:-1] + [list(a.dealer_first_card.values())[-1]//4]*4
+    
+    
+def WhatIf(sendcard, wantsplit):
+    
+    global match_cnt
+
+    global dealer_first_card
+    
+    match_cnt = 0 # initialize
+    
+    dealer_first_card = {
+            '11':0,
+            '2':0,
+            '3':0,
+            '4':0,
+            '5':0,
+            '6':0,
+            '7':0,
+            '8':0,
+            '9':0,
+            '10':0
+        }
+    
+    breakpoint = 14
+    
+    for _ in range(1000):
+
+        a = BlackJack(always_insurance=False)
+        
+        while len(a.deq) > 20: #카드가 20장 미만일 경우 새게임
+
+            a.player_card = sendcard[:]
+            a.player_point = []
+            a.splited = False
+            a.dealer_card = []
+            a.dealer_point = []
+
+            
+            
+            if wantsplit:
+                a.Split()
+            
+            a.PointCalc(a.player_card) #플레이어 카드 값 합계 계산
+            
+            a.DealerFirstCard()
+
+            while min(a.player_point) < breakpoint:
+                a.HitOrStand(Hit=True, breakpoint=breakpoint)
+                a.PointCalc(a.player_card)
+
+            a.Burst()
+
+            a.DealerCard()
+            
+            match_cnt += 1
+            
+            if wantsplit:
+                for letter in a.Compare():
+                    if letter == 'P':
+                        dealer_first_card[str(a.CardSum(a.dealer_card[0]))] += 1
+                        
+            else:
+                if a.Compare() == 'P':
+                    dealer_first_card[str(a.CardSum(a.dealer_card[0]))] += 1
+                    
+                    
+                    
+def CaseByCase(sendcard):
+    
+    global match_cnt
+    global dealer_first_card
+    
+    match_cnt = 0 # initialize
+    
+    dealer_first_card = {
+            '11':0,
+            '2':0,
+            '3':0,
+            '4':0,
+            '5':0,
+            '6':0,
+            '7':0,
+            '8':0,
+            '9':0,
+            '10':0
+        }
+    
+    breakpoint = 14
+    
+    for _ in range(1000):
+
+        a = BlackJack(always_insurance=False)
+        
+        while len(a.deq) > 20: #카드가 20장 미만일 경우 새게임
+
+            a.player_card = sendcard[:]
+            a.player_point = []
+            a.splited = False
+            a.dealer_card = []
+            a.dealer_point = []
+
+            
+            
+            a.PointCalc(a.player_card) #플레이어 카드 값 합계 계산
+            
+            a.DealerFirstCard()
+
+            while min(a.player_point) < breakpoint:
+                a.HitOrStand(Hit=True, breakpoint=breakpoint)
+                a.PointCalc(a.player_card)
+
+            a.Burst()
+
+            a.DealerCard()
+            
+            match_cnt += 1
+            
+            if a.Compare() == 'P':
                 dealer_first_card[str(a.CardSum(a.dealer_card[0]))] += 1
-
-    print('승률 : {:.2f}%'.format(100* sum(dealer_first_card.values())/match_cnt))
-    lists = list(dealer_first_card.values())[:-1] + [list(dealer_first_card.values())[-1]//4]*4
-
 
